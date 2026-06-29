@@ -1,6 +1,6 @@
 # ricky-g.com
 
-Personal landing page for **Ricky Gummadi** — Senior Cloud Solution Architect.
+Personal landing page for **Ricky Gummadi**
 
 Live site: https://ricky-g.com
 
@@ -18,6 +18,3 @@ Open `index.html` directly, or serve it:
 ```bash
 python -m http.server 8000
 ```
-
-## TODO
-- Replace the placeholder LinkedIn URL in `index.html` with the real profile.
