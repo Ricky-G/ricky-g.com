@@ -105,7 +105,7 @@
       </div>
       <div class="arcade-tabs" role="tablist" aria-label="Pick a game">
         <button class="arcade-tab is-active" type="button" data-game="snake" role="tab" aria-selected="true">🐍 snake</button>
-        <button class="arcade-tab" type="button" data-game="mines" role="tab" aria-selected="false">💣 mines</button>
+        <button class="arcade-tab" type="button" data-game="mines" role="tab" aria-selected="false">💣 minesweeper</button>
       </div>
       <div class="arcade-stage" id="arcade-stage">
         <canvas id="snake-canvas" class="arcade-canvas"></canvas>
@@ -362,7 +362,7 @@
         function hideOverlay() { overlay.hidden = true; }
 
         /* ---------- SNAKE ---------- */
-        var COLS = 15, ROWS = 15, cell = 18, raf = null, snake, dir, nextDir, food, score, step, acc, lastT, snakeRunning = false;
+        var COLS = 15, ROWS = 15, cell = 18, raf = null, snake, dir, nextDir, food, score, step, acc, lastT, snakeRunning = false, snakeWaiting = false;
         function fitCanvas() {
           var w = Math.max(160, Math.floor(stage.clientWidth));
           var h = Math.max(160, Math.floor(stage.clientHeight));
@@ -426,6 +426,7 @@
         }
         function tickSnake(t) {
           if (!snakeRunning) return;
+          if (snakeWaiting) { lastT = t; raf = requestAnimationFrame(tickSnake); return; }
           if (!lastT) lastT = t;
           acc += t - lastT; lastT = t;
           while (acc >= step) {
@@ -447,7 +448,7 @@
           raf = requestAnimationFrame(tickSnake);
         }
         function gameOverSnake() {
-          snakeRunning = false;
+          snakeRunning = false; snakeWaiting = false;
           if (raf) cancelAnimationFrame(raf);
           if (score > readBest('arcade-snake-best')) { writeBest('arcade-snake-best', score); }
           updateStatus();
@@ -456,12 +457,14 @@
         }
         function startSnake() {
           snakeRunning = false; fitCanvas(); resetSnake(); drawSnake(); hideOverlay();
-          snakeRunning = true; lastT = 0; acc = 0;
+          snakeRunning = true; snakeWaiting = true; lastT = 0; acc = 0;
+          statusEl.textContent = 'ready · your move';
           raf = requestAnimationFrame(tickSnake);
         }
         function setDir(x, y) {
           if (x === -dir.x && y === -dir.y) return; // no reversing
           nextDir = { x: x, y: y };
+          if (snakeWaiting) { snakeWaiting = false; lastT = 0; acc = 0; updateStatus(); }
         }
 
         /* ---------- MINESWEEPER ---------- */
@@ -565,7 +568,7 @@
 
         function selectGame(game) {
           if (game === current) return;
-          snakeRunning = false; minesRunning = false;
+          snakeRunning = false; snakeWaiting = false; minesRunning = false;
           if (raf) cancelAnimationFrame(raf);
           current = game;
           tabs.forEach(function (t) {
