@@ -16,7 +16,7 @@
   <meta name="twitter:card" content="summary" />
   <meta name="theme-color" content="#0e9f6e" />
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%81%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%230d9488'/%3E%3Cstop offset='.5' stop-color='%2310b981'/%3E%3Cstop offset='1' stop-color='%2334d399'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='50' y='67' text-anchor='middle' font-family='Space Grotesk,Arial,sans-serif' font-weight='700' font-size='70' letter-spacing='-3' fill='url(%23g)'%3Eg.%3C/text%3E%3C/svg%3E" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -362,24 +362,30 @@
         function hideOverlay() { overlay.hidden = true; }
 
         /* ---------- SNAKE ---------- */
-        var N = 15, cell = 16, raf = null, snake, dir, nextDir, food, score, step, acc, lastT, snakeRunning = false;
+        var COLS = 15, ROWS = 15, cell = 18, raf = null, snake, dir, nextDir, food, score, step, acc, lastT, snakeRunning = false;
         function fitCanvas() {
-          var size = Math.max(160, Math.floor(stage.clientWidth));
-          cell = Math.floor(size / N);
-          var px = cell * N;
+          var w = Math.max(160, Math.floor(stage.clientWidth));
+          var h = Math.max(160, Math.floor(stage.clientHeight));
+          if (!snakeRunning) {
+            COLS = Math.max(11, Math.round(w / 22));
+            ROWS = Math.max(11, Math.round(h / 22));
+          }
+          cell = Math.max(8, Math.floor(Math.min(w / COLS, h / ROWS)));
+          var pxW = cell * COLS, pxH = cell * ROWS;
           var dpr = window.devicePixelRatio || 1;
-          canvas.width = px * dpr; canvas.height = px * dpr;
-          canvas.style.width = px + 'px'; canvas.style.height = px + 'px';
+          canvas.width = pxW * dpr; canvas.height = pxH * dpr;
+          canvas.style.width = pxW + 'px'; canvas.style.height = pxH + 'px';
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
           if (!snakeRunning) drawSnake();
         }
         function spawnFood() {
           do {
-            food = { x: (Math.random() * N) | 0, y: (Math.random() * N) | 0 };
+            food = { x: (Math.random() * COLS) | 0, y: (Math.random() * ROWS) | 0 };
           } while (snake && snake.some(function (s) { return s.x === food.x && s.y === food.y; }));
         }
         function resetSnake() {
-          snake = [{ x: 7, y: 7 }, { x: 6, y: 7 }, { x: 5, y: 7 }];
+          var cx = Math.floor(COLS / 2), cy = Math.floor(ROWS / 2);
+          snake = [{ x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }];
           dir = { x: 1, y: 0 }; nextDir = dir; score = 0; step = 130; acc = 0; lastT = 0;
           spawnFood(); updateStatus();
         }
@@ -389,17 +395,16 @@
         }
         function css(v) { return getComputedStyle(document.body).getPropertyValue(v).trim(); }
         function drawSnake() {
-          var px = cell * N;
-          ctx.clearRect(0, 0, px, px);
+          if (!snake || !food) return;
+          var pxW = cell * COLS, pxH = cell * ROWS;
+          ctx.clearRect(0, 0, pxW, pxH);
           ctx.fillStyle = css('--surface-2') || '#fafaf7';
-          ctx.fillRect(0, 0, px, px);
+          ctx.fillRect(0, 0, pxW, pxH);
           // subtle grid
           ctx.strokeStyle = 'rgba(125,125,125,0.10)';
           ctx.lineWidth = 1;
-          for (var i = 1; i < N; i++) {
-            ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, px); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(px, i * cell); ctx.stroke();
-          }
+          for (var i = 1; i < COLS; i++) { ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, pxH); ctx.stroke(); }
+          for (var j = 1; j < ROWS; j++) { ctx.beginPath(); ctx.moveTo(0, j * cell); ctx.lineTo(pxW, j * cell); ctx.stroke(); }
           // food (apple)
           ctx.fillStyle = '#ef4444';
           roundRect(food.x * cell + 3, food.y * cell + 3, cell - 6, cell - 6, 4); ctx.fill();
@@ -427,7 +432,7 @@
             acc -= step;
             dir = nextDir;
             var head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-            if (head.x < 0 || head.y < 0 || head.x >= N || head.y >= N ||
+            if (head.x < 0 || head.y < 0 || head.x >= COLS || head.y >= ROWS ||
                 snake.some(function (s) { return s.x === head.x && s.y === head.y; })) {
               return gameOverSnake();
             }
@@ -450,7 +455,7 @@
             'score ' + score + ' · best ' + readBest('arcade-snake-best'), '↻ try again');
         }
         function startSnake() {
-          resetSnake(); fitCanvas(); hideOverlay();
+          snakeRunning = false; fitCanvas(); resetSnake(); drawSnake(); hideOverlay();
           snakeRunning = true; lastT = 0; acc = 0;
           raf = requestAnimationFrame(tickSnake);
         }
@@ -570,7 +575,7 @@
           if (game === 'snake') {
             canvas.hidden = false; minesEl.hidden = true;
             hint.textContent = 'arrow keys, WASD or swipe';
-            resetSnake(); fitCanvas();
+            fitCanvas(); resetSnake(); drawSnake();
             statusEl.textContent = 'score 0'; bestEl.textContent = 'best ' + readBest('arcade-snake-best');
           } else {
             canvas.hidden = true; minesEl.hidden = false;
@@ -613,7 +618,7 @@
         window.addEventListener('resize', function () { if (current === 'snake') fitCanvas(); });
 
         // boot
-        resetSnake(); fitCanvas();
+        fitCanvas(); resetSnake(); drawSnake();
         bestEl.textContent = 'best ' + readBest('arcade-snake-best');
       })();
 
