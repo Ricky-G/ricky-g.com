@@ -117,6 +117,7 @@
             <span class="arcade-sub" id="arcade-sub"></span>
           </div>
           <button class="arcade-btn" id="arcade-action" type="button">▶ play</button>
+          <p class="arcade-coin" id="arcade-coin">▸ press start</p>
           <p class="arcade-hint" id="arcade-hint">arrow keys, WASD or swipe</p>
         </div>
       </div>
@@ -294,28 +295,36 @@
         });
       });
 
-      // ===== Code-spark cursor trail (header + footer) =====
+      // ===== Code-spark cursor trail (header, footer + page edges) =====
       {
         var TOKENS = ['</>', '{ }', '( )', '=>', '&&', '||', '0', '1', '#!', 'λ', '∑', 'π', '∞',
                       'AI', 'git', 'npm', 'def', 'fn', 'async', 'await', '<ai>', '0x', '~$', '✦', '🤖', '⌘', '[]'];
-        document.querySelectorAll('.card--name, .card--foot').forEach(function (zone) {
-          var last = 0;
-          zone.addEventListener('pointermove', function (e) {
-            var now = performance.now();
-            if (now - last < 55) return;   // throttle
-            last = now;
-            var r = zone.getBoundingClientRect();
-            var s = document.createElement('span');
-            s.className = 'code-spark';
-            s.textContent = TOKENS[(Math.random() * TOKENS.length) | 0];
-            s.style.left = (e.clientX - r.left) + 'px';
-            s.style.top = (e.clientY - r.top) + 'px';
-            s.style.setProperty('--dx', ((Math.random() * 60 - 30)).toFixed(0) + 'px');
-            s.style.setProperty('--rot', ((Math.random() * 60 - 30)).toFixed(0) + 'deg');
-            s.style.fontSize = (10 + Math.random() * 8).toFixed(0) + 'px';
-            zone.appendChild(s);
-            setTimeout(function () { s.remove(); }, 900);
-          });
+        var sparkLayer = document.createElement('div');
+        sparkLayer.className = 'spark-layer';
+        document.body.appendChild(sparkLayer);
+        var lastSpark = 0;
+        document.addEventListener('pointermove', function (e) {
+          if (e.pointerType === 'touch') return;
+          var el = e.target;
+          var card = (el && el.closest) ? el.closest('.card') : null;
+          var zone;
+          if (!card) zone = 'outside';
+          else if (card.classList.contains('card--name') || card.classList.contains('card--foot')) zone = 'edge';
+          else return; // keep the reading/content cards clean
+          var now = performance.now();
+          var gap = zone === 'outside' ? 32 : 45;
+          if (now - lastSpark < gap) return;
+          lastSpark = now;
+          var s = document.createElement('span');
+          s.className = 'code-spark' + (zone === 'outside' ? ' big' : '');
+          s.textContent = TOKENS[(Math.random() * TOKENS.length) | 0];
+          s.style.left = e.clientX + 'px';
+          s.style.top = e.clientY + 'px';
+          s.style.setProperty('--dx', ((Math.random() * 80 - 40)).toFixed(0) + 'px');
+          s.style.setProperty('--rot', ((Math.random() * 70 - 35)).toFixed(0) + 'deg');
+          s.style.fontSize = (zone === 'outside' ? (22 + Math.random() * 8) : (15 + Math.random() * 8)).toFixed(0) + 'px';
+          sparkLayer.appendChild(s);
+          setTimeout(function () { s.remove(); }, 1000);
         });
       }
 
@@ -326,6 +335,7 @@
         var overlay = document.getElementById('arcade-overlay');
         var action = document.getElementById('arcade-action');
         var hint = document.getElementById('arcade-hint');
+        var coinEl = document.getElementById('arcade-coin');
         var result = document.getElementById('arcade-result');
         var emojiEl = document.getElementById('arcade-emoji');
         var titleEl = document.getElementById('arcade-title');
@@ -344,12 +354,14 @@
           overlay.hidden = false;
           if (result) result.hidden = true;
           hint.hidden = false;
+          if (coinEl) coinEl.hidden = false;
           action.textContent = btn || '▶ play';
           if (text) hint.textContent = text;
         }
         function showResult(tone, emoji, title, sub, btn) {
           overlay.hidden = false;
           hint.hidden = true;
+          if (coinEl) coinEl.hidden = true;
           result.hidden = false;
           result.className = 'arcade-result';
           void result.offsetWidth;                 // restart entrance animation
