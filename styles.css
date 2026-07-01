@@ -116,6 +116,54 @@ a { color: var(--accent); }
 
 /* Headings inside cards */
 .card-title { font-family: var(--display); font-size: 1.15rem; font-weight: 600; margin: 0 0 0.7rem; letter-spacing: -0.01em; }
+
+/* Animated test tube brewing code (Building card) — same spirit as the footer coffee */
+.card--exp .card-title { display: inline-flex; align-items: center; gap: 0.5rem; }
+.beaker {
+  position: relative; display: inline-block; width: 26px; height: 26px;
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+  overflow: visible; flex: none;
+}
+.beaker-glass { display: block; overflow: visible; }
+.beaker-liquid {
+  fill: #10b981;
+  transform-box: fill-box; transform-origin: bottom;
+  animation: beakerFizz 2.6s ease-in-out infinite;
+}
+.beaker-bubble { fill: rgba(255,255,255,0.85); opacity: 0; animation: beakerBubble 2.2s ease-in infinite; }
+.beaker-bubble.bub2 { animation-delay: 0.7s; }
+.beaker-bubble.bub3 { animation-delay: 1.3s; }
+.beaker-outline, .beaker-rim { opacity: 0.85; }
+
+/* code snippets floating up out of the tube, like steam */
+.code-bit {
+  position: absolute; left: 50%; bottom: 20px;
+  font-family: var(--mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 9px; font-weight: 700; font-style: normal; line-height: 1;
+  color: color-mix(in srgb, var(--accent) 78%, var(--text));
+  opacity: 0; white-space: nowrap; pointer-events: none;
+  animation: codeRise 2.8s ease-in-out infinite;
+}
+.code-bit--1 { margin-left: -9px; animation-delay: 0s; }
+.code-bit--2 { margin-left: -4px; animation-delay: 0.7s; }
+.code-bit--3 { margin-left: 1px;  animation-delay: 1.4s; }
+.code-bit--4 { margin-left: 6px;  animation-delay: 2.1s; font-size: 11px; }
+
+@keyframes beakerFizz {
+  0%, 100% { transform: scaleY(1); fill: #10b981; }
+  50%      { transform: scaleY(1.08); fill: #34d399; }
+}
+@keyframes beakerBubble {
+  0%   { opacity: 0; transform: translateY(2px); }
+  30%  { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes codeRise {
+  0%   { opacity: 0; transform: translateY(2px) scale(0.6) rotate(-4deg); }
+  20%  { opacity: 1; }
+  70%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-20px) scale(1.05) rotate(6deg); }
+}
 .card-eyebrow { font-size: 0.76rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 0; }
 
 /* ====== Name / hero card ====== */
@@ -137,6 +185,46 @@ a { color: var(--accent); }
 }
 .role { font-weight: 600; color: var(--text); margin: 0.65rem 0 1rem; }
 .blurb { color: var(--muted); max-width: 48ch; margin: 0 0 1.4rem; }
+
+/* inline blog link — gradient text with animated underline */
+.blurb-link {
+  position: relative; white-space: nowrap;
+  font-weight: 700; text-decoration: none;
+  background: linear-gradient(110deg, #0d9488, #10b981 45%, #34d399);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  transition: filter 0.2s ease;
+}
+.blurb-link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px;
+  border-radius: 2px; transform: scaleX(0.35); transform-origin: left;
+  background: linear-gradient(110deg, #0d9488, #10b981 45%, #34d399);
+  opacity: 0.55; transition: transform 0.28s ease, opacity 0.2s ease;
+}
+.blurb-link__arrow {
+  display: inline-block; margin-left: 0.12em;
+  -webkit-text-fill-color: currentColor; /* opt out of the parent gradient clip */
+  transition: transform 0.25s ease, color 0.2s ease;
+  will-change: transform;
+}
+.blurb-link:hover { filter: brightness(1.12) saturate(1.15); }
+.blurb-link:hover::after { transform: scaleX(1); opacity: 1; }
+.blurb-link:hover .blurb-link__arrow {
+  color: #ef4444;
+  animation: rocket-launch 0.85s cubic-bezier(0.5, 0, 0.35, 1) infinite;
+}
+.blurb-link:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px;
+}
+
+/* 🚀 ignite → blast off up-right → drop back in and relaunch */
+@keyframes rocket-launch {
+  0%   { transform: translate(0, 0) scale(1) rotate(0deg);        opacity: 1; color: #ef4444; text-shadow: none; }
+  16%  { transform: translate(-2px, 2px) scale(0.9) rotate(-6deg); opacity: 1; color: #f97316; text-shadow: 0 4px 7px rgba(249,115,22,0.7); }
+  58%  { transform: translate(18px, -22px) scale(0.78) rotate(10deg); opacity: 0; color: #f59e0b; text-shadow: -10px 12px 12px rgba(239,68,68,0.75); }
+  59%  { transform: translate(-14px, 16px) scale(0.55) rotate(0deg);  opacity: 0; text-shadow: none; }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg);        opacity: 1; color: #ef4444; text-shadow: none; }
+}
+
 .btns { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 1.4rem; }
 
 /* colourful signed quote (anchors to the bottom of its card) */
